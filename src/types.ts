@@ -18,6 +18,15 @@ export interface Criterion {
   max: number;
 }
 
+export interface ScoreRevision {
+  version: number;
+  values: Record<string, number>;
+  comment: string;
+  conflict: boolean;
+  updatedAt: string;
+  actor: Viewer;
+}
+
 export interface ScoreRecord {
   id: string;
   judge: Viewer;
@@ -27,6 +36,29 @@ export interface ScoreRecord {
   submitted: boolean;
   conflict: boolean;
   updatedAt: string;
+  version: number;
+  revisions: ScoreRevision[];
+}
+
+/** 利益关系复核状态：待处理（暂停排名）/ 已复核（出结论）/ 已失效（评分改动，需重新核对）/ 待更正（锁定后登记，不影响锁定版本） */
+export type ReviewStatus = "待处理" | "已复核" | "已失效" | "待更正";
+export type ReviewResult = "成立" | "不成立";
+
+export interface ReviewRecord {
+  id: string;
+  schemeId: string;
+  scoreId: string;
+  judge: Viewer;
+  basis: string;
+  status: ReviewStatus;
+  result?: ReviewResult;
+  registeredAt: string;
+  registeredBy: Viewer;
+  reviewedAt?: string;
+  reviewedBy?: Viewer;
+  invalidatedAt?: string;
+  /** 登记依据时所对应的评分版本；评分一旦改动，旧复核据此失效 */
+  scoreVersion: number;
 }
 
 export interface ReviewEvent {
@@ -35,4 +67,17 @@ export interface ReviewEvent {
   actor: Viewer;
   action: string;
   detail: string;
+}
+
+export interface RankingRow extends Scheme {
+  total: number;
+  judgeCount: number;
+  conflictCount: number;
+  insufficient: boolean;
+}
+
+export interface LockedRanking {
+  ranked: RankingRow[];
+  insufficient: RankingRow[];
+  lockedAt: string;
 }
